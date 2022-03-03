@@ -105,7 +105,7 @@ enum emcy_can_data {
 #define ENCODER_OBJ		0x6064		// エンコーダ情報
 #define POLARITY_OBJ	0x607E		// 極性
 
-#define DEMANDVEL_OBJ	0x6068		// ドライバ内部の速度要求値
+#define DEMANDVEL_OBJ	0x606B		// ドライバ内部の速度要求値
 #define CURRENT_OBJ		0x2050		// トルク電流値
 #define ACTVEL_OBJ		0x606C		// 速度実測値
 
@@ -239,11 +239,11 @@ void reset_motor_alarm_auto(void){
 /******************************************************************************/
 /*           Wheel motor CAN control function								  */
 /******************************************************************************/
-uint8_t transmit_motor_control_data(uint16_t id, uint8_t request, uint16_t index, uint8_t sub_index, int32_t data) {
+HAL_StatusTypeDef transmit_motor_control_data(uint16_t id, uint8_t request, uint16_t index, uint8_t sub_index, int32_t data) {
 
 	union LongByte tx_cnv;
 	uint8_t tx_data[8];
-	uint8_t Result = STORE_OK;
+	HAL_StatusTypeDef Result = HAL_OK;
 
 	tx_cnv.l_val = 0;	//共用体の初期化
 
@@ -262,8 +262,7 @@ uint8_t transmit_motor_control_data(uint16_t id, uint8_t request, uint16_t index
 	tx_data[6] = tx_cnv.b_val[2];
 	tx_data[7] = tx_cnv.b_val[3];
 
-	//Result = can1_transmit(id, tx_data);
-	Result = can1_push_txmsg(id, tx_data);
+	Result = can1_transmit(id, tx_data);
 
 	return Result;
 }
@@ -314,6 +313,10 @@ void receive_wheel_motor_data(uint8_t *receive_data, uint8_t l_r) {
 
 	case ENCODER_OBJ:
 		motor_data->whl_encoder = rx_cnv.l_val;
+		break;
+
+	case TARGET_SPEED:
+		motor_data->whl_trgt_vel = rx_cnv.l_val;
 		break;
 
 	case DEMANDVEL_OBJ:
@@ -401,6 +404,14 @@ uint32_t get_r_wheel_encoder(void) {
 	return r_motor_data.whl_encoder;
 }
 
+int32_t get_l_wheel_trgt_vel(void){
+	return l_motor_data.whl_trgt_vel;
+}
+
+int32_t get_r_wheel_trgt_vel(void){
+	return r_motor_data.whl_trgt_vel;
+}
+
 int32_t get_l_wheel_demand_vel(void){
 	return l_motor_data.whl_demand_vel;
 }
@@ -427,30 +438,30 @@ int32_t get_r_wheel_act_vel(void){
 
 uint8_t set_drive_mode(uint8_t mode) {
 
-	uint8_t l_result = STORE_OK;
-	uint8_t r_result = STORE_OK;
-	uint8_t result = STORE_OK;
+	HAL_StatusTypeDef l_result = HAL_OK;
+	HAL_StatusTypeDef r_result = HAL_OK;
+	HAL_StatusTypeDef result = HAL_OK;
 
 	l_result = transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), WRITE_REQ_1B, DRIVE_MODE, SUB_INDEX_0, mode);
 	r_result = transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), WRITE_REQ_1B, DRIVE_MODE, SUB_INDEX_0, mode);
 
-	if ((l_result != STORE_OK) || (r_result != STORE_OK)) {
-		result = STORE_NG;
+	if ((l_result != HAL_OK) || (r_result != HAL_OK)) {
+		result = HAL_ERROR;
 	}
 	return result;
 }
 
-uint8_t set_control_word(uint16_t mode) {
+HAL_StatusTypeDef set_control_word(uint16_t mode) {
 
-	uint8_t l_result = STORE_OK;
-	uint8_t r_result = STORE_OK;
-	uint8_t result = STORE_OK;
+	HAL_StatusTypeDef l_result = HAL_OK;
+	HAL_StatusTypeDef r_result = HAL_OK;
+	HAL_StatusTypeDef result = HAL_OK;
 
 	l_result = transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), WRITE_REQ_2B, CNTRL_WORD, SUB_INDEX_0, mode);
 	r_result = transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), WRITE_REQ_2B, CNTRL_WORD, SUB_INDEX_0, mode);
 
-	if ((l_result != STORE_OK) || (r_result != STORE_OK)) {
-		result = STORE_NG;
+	if ((l_result != HAL_OK) || (r_result != HAL_OK)) {
+		result = HAL_ERROR;
 	}
 	return result;
 }
@@ -462,15 +473,15 @@ void read_status_word(void) {
 
 HAL_StatusTypeDef change_wheel_brake_mode(uint16_t mode) {
 	// ブレーキモードの変更
-	uint8_t l_result = STORE_OK;
-	uint8_t r_result = STORE_OK;
-	uint8_t result = STORE_OK;
+	HAL_StatusTypeDef l_result = HAL_OK;
+	HAL_StatusTypeDef r_result = HAL_OK;
+	HAL_StatusTypeDef result = HAL_OK;
 
 	l_result = transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), WRITE_REQ_2B, BRAKE_PARAM, SUB_INDEX_5, mode);
 	r_result = transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), WRITE_REQ_2B, BRAKE_PARAM, SUB_INDEX_5, mode);
 
-	if ((l_result != STORE_OK) || (r_result != STORE_OK)) {
-		result = STORE_NG;
+	if ((l_result != HAL_OK) || (r_result != HAL_OK)) {
+		result = HAL_ERROR;
 	}
 	return result;
 }
@@ -489,15 +500,15 @@ void reset_brake_mode(void) {
 
 HAL_StatusTypeDef wheel_set_brake(uint32_t brake) {
 
-	uint8_t l_result = STORE_OK;
-	uint8_t r_result = STORE_OK;
-	uint8_t result = STORE_OK;
+	HAL_StatusTypeDef l_result = HAL_OK;
+	HAL_StatusTypeDef r_result = HAL_OK;
+	HAL_StatusTypeDef result = HAL_OK;
 
 	l_result = transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), WRITE_REQ_4B, DEGITAL_IO, SUB_INDEX_1, brake);
 	r_result = transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), WRITE_REQ_4B, DEGITAL_IO, SUB_INDEX_1, brake);
 
-	if ((l_result != STORE_OK) || (r_result != STORE_OK)) {
-		result = STORE_NG;
+	if ((l_result != HAL_OK) || (r_result != HAL_OK)) {
+		result = HAL_ERROR;
 	}
 	return result;
 }
@@ -540,20 +551,20 @@ void wheel_set_speed(int16_t left, int16_t right) {
 	static int16_t right_old = 0xFFFF;
 	int32_t l_wheel_rot = calc_wheel_speed(left);
 	int32_t r_wheel_rot = calc_wheel_speed(right);
-	uint8_t l_result = STORE_OK;
-	uint8_t r_result = STORE_OK;
+	HAL_StatusTypeDef l_result = HAL_OK;
+	HAL_StatusTypeDef r_result = HAL_OK;
 
 	// 同じ内容の通信を何度も行わないためのガード
 	if (left != left_old) {
 		l_result = transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), WRITE_REQ_4B, TARGET_SPEED, SUB_INDEX_0, l_wheel_rot);
-		if (l_result == STORE_OK) {
+		if (l_result == HAL_OK) {
 			left_old = left;
 		}
 	}
 
 	if (right != right_old) {
 		transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), WRITE_REQ_4B, TARGET_SPEED, SUB_INDEX_0, r_wheel_rot);
-		if (r_result == STORE_OK) {
+		if (r_result == HAL_OK) {
 			right_old = right;
 		}
 	}
@@ -562,45 +573,56 @@ void wheel_set_speed(int16_t left, int16_t right) {
 /******************************************************************************/
 /*           Wheel motor control function									  */
 /******************************************************************************/
-void monitor_wheel_encoder(void) {
+enum can_tx_pahse{
+	Whl_Encoder,
+	Whl_TrgtVel,
+	Whl_DemandVel,
+	Whl_Current,
+	Whl_Act_vel,
+};
+void monit_wheel_feedback(void) {
 
+	static uint8_t phase = Whl_Encoder;
 	if (wheel_seq >= Whl_Run) {
 		// 起動が完了していないタイミングでは、エンコーダー情報を取得しにいかない
-		transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), READ_REQ, ENCODER_OBJ, SUB_INDEX_0, READ_DATA);
-		transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), READ_REQ, ENCODER_OBJ, SUB_INDEX_0, READ_DATA);
+		switch(phase){
+		case Whl_Encoder:
+			//transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), READ_REQ, ENCODER_OBJ, SUB_INDEX_0, READ_DATA);
+			transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), READ_REQ, ENCODER_OBJ, SUB_INDEX_0, READ_DATA);
+			phase = Whl_TrgtVel;
+			break;
+		case Whl_TrgtVel:
+			//transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), READ_REQ, TARGET_SPEED, SUB_INDEX_0, READ_DATA);
+			transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), READ_REQ, TARGET_SPEED, SUB_INDEX_0, READ_DATA);
+			phase = Whl_DemandVel;
+			break;
+
+		case Whl_DemandVel:
+			//transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), READ_REQ, DEMANDVEL_OBJ, SUB_INDEX_0, READ_DATA);
+			transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), READ_REQ, DEMANDVEL_OBJ, SUB_INDEX_0, READ_DATA);
+			phase = Whl_Current;
+			break;
+		case Whl_Current:
+			//transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), READ_REQ, CURRENT_OBJ, SUB_INDEX_0, READ_DATA);
+			transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), READ_REQ, CURRENT_OBJ, SUB_INDEX_0, READ_DATA);
+			phase = Whl_Act_vel;
+			break;
+		case Whl_Act_vel:
+			//transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), READ_REQ, ACTVEL_OBJ, SUB_INDEX_0, READ_DATA);
+			transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), READ_REQ, ACTVEL_OBJ, SUB_INDEX_0, READ_DATA);
+			phase = Whl_Encoder;
+			break;
+		}
 	}
 }
 
-void monitor_wheel_demand_vel(void){
-	// ドライバ内部での速度要求値を取得する
-	if (wheel_seq >= Whl_Run) {
-		transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), READ_REQ, DEMANDVEL_OBJ, SUB_INDEX_0, READ_DATA);
-		transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), READ_REQ, DEMANDVEL_OBJ, SUB_INDEX_0, READ_DATA);
-	}
-}
-
-void monitor_wheel_current(void){
-	// 電流値を取得する
-	if (wheel_seq >= Whl_Run) {
-		transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), READ_REQ, CURRENT_OBJ, SUB_INDEX_0, READ_DATA);
-		transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), READ_REQ, CURRENT_OBJ, SUB_INDEX_0, READ_DATA);
-	}
-}
-
-void monitor_wheel_act_vel(void){
-	// 速度実測値を取得する
-	if (wheel_seq >= Whl_Run) {
-		transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), READ_REQ, ACTVEL_OBJ, SUB_INDEX_0, READ_DATA);
-		transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), READ_REQ, ACTVEL_OBJ, SUB_INDEX_0, READ_DATA);
-	}
-}
 
 uint8_t wheel_initialize(void) {
 	// DSP402の状態機械に従い、走行モーターを起動する
 
 	static uint8_t init_set = Set_DriveMode;
 	static uint8_t retry_cnt = 0;
-	uint8_t result = STORE_OK;
+	HAL_StatusTypeDef result = HAL_OK;
 	uint8_t ret = 0;
 
 	if (check_timer(CNT_WHEEL_WAIT) == TIME_UP) {
@@ -609,19 +631,19 @@ uint8_t wheel_initialize(void) {
 		if (init_set == Set_DriveMode) {
 			// 運転モードを速度プロファイルモードに設定
 			result = set_drive_mode(SPD_PROFILE_MODE);
-			if (result == STORE_OK) {
+			if (result == HAL_OK) {
 				init_set++;
 			}
 		} else if (init_set == Sw_On_Ready) {
 			// スイッチON準備完了の設定
 			result = set_control_word(SW_ON_READY);
-			if (result == STORE_OK) {
+			if (result == HAL_OK) {
 				init_set++;
 			}
 		} else if (init_set == Sw_On) {
 			// スイッチONの設定
 			result = set_control_word(SW_ON);
-			if (result == STORE_OK) {
+			if (result == HAL_OK) {
 				init_set++;
 			}
 		} else if (init_set == Sw_On_Check) {
@@ -641,7 +663,7 @@ uint8_t wheel_initialize(void) {
 		} else if (init_set == Drive_Enable) {
 			// 運転有効の設定
 			result = set_control_word(DRV_ENABLE);
-			if (result == STORE_OK) {
+			if (result == HAL_OK) {
 				init_set++;
 			}
 		} else if (init_set == Drive_Enable_Check) {
@@ -671,7 +693,7 @@ uint8_t wheel_initialize(void) {
 uint8_t wheel_parameter(void) {
 
 	static uint8_t parameter_set = Set_Accel;
-	uint8_t result = STORE_OK;
+	HAL_StatusTypeDef result = HAL_OK;
 	uint8_t ret = 0;
 
 	if (check_timer(CNT_WHEEL_WAIT) == TIME_UP) {
@@ -690,7 +712,7 @@ uint8_t wheel_parameter(void) {
 		} else if (parameter_set == Set_Polarity) {
 			// 右モーターの極性を反転させる
 			result = transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), WRITE_REQ_1B, POLARITY_OBJ, SUB_INDEX_0, POLARITY_REV);
-			if (result == STORE_OK) {
+			if (result == HAL_OK) {
 				parameter_set++;
 			}
 		} else if (parameter_set == Param_Num) {
@@ -708,7 +730,7 @@ void wheel_init(void) {
 
 void wheel_cntrl(int16_t left, int16_t right) {
 
-	uint8_t result = STORE_OK;
+	HAL_StatusTypeDef result = HAL_OK;
 
 	switch(wheel_seq) {
 	case Whl_PowerOn:
@@ -746,7 +768,7 @@ void wheel_cntrl(int16_t left, int16_t right) {
 					// ブレーキ解除スイッチが押された場合、ブレーキモードを手動に変更しブレーキを解除する
 					// 運転モードを無効に設定
 					result = set_control_word(DRV_DISABLE);
-					if (result == STORE_OK) {
+					if (result == HAL_OK) {
 						set_utimer(CNT_WHEEL_WAIT, RESEND_WAIT);
 						wheel_seq = Drv_Mode_Disable;
 					}
@@ -765,7 +787,7 @@ void wheel_cntrl(int16_t left, int16_t right) {
 			reset_brake_mode();
 			// ブレーキモードを手動に設定
 			result = change_wheel_brake_mode(MANUAL_BRAKE);
-			if (result == STORE_OK) {
+			if (result == HAL_OK) {
 				set_utimer(CNT_WHEEL_WAIT, RESEND_WAIT);
 				wheel_seq = Change_BrkMode_Manu;
 			}
@@ -786,7 +808,7 @@ void wheel_cntrl(int16_t left, int16_t right) {
 			// ブレーキモードが手動に設定されたのを確認後、ブレーキを解除する
 			reset_brake_status();
 			result = wheel_set_brake(BRAKE_OFF);
-			if (result == STORE_OK) {
+			if (result == HAL_OK) {
 				set_utimer(CNT_WHEEL_WAIT, RESEND_WAIT);
 				wheel_seq = Whl_TorqueOff;
 			}
@@ -794,7 +816,7 @@ void wheel_cntrl(int16_t left, int16_t right) {
 			if (check_timer(CNT_WHEEL_WAIT) == TIME_UP) {
 				// 一定時間経過してもブレーキモードが書き変わらない場合、ブレーキモード切り替え指令を再送する
 				change_wheel_brake_mode(MANUAL_BRAKE);
-				if (result == STORE_OK) {
+				if (result == HAL_OK) {
 					set_utimer(CNT_WHEEL_WAIT, RESEND_WAIT);
 				}
 			} else {
@@ -808,7 +830,7 @@ void wheel_cntrl(int16_t left, int16_t right) {
 			// ブレーキON指令が来た場合、ブレーキモードを自動に設定する
 			reset_brake_mode();
 			result = change_wheel_brake_mode(AUTO_BRAKE);
-			if (result == STORE_OK) {
+			if (result == HAL_OK) {
 				set_utimer(CNT_WHEEL_WAIT, RESEND_WAIT);
 				wheel_seq = Change_BrkMode_Auto;
 			}
@@ -819,7 +841,7 @@ void wheel_cntrl(int16_t left, int16_t right) {
 			if (check_timer(CNT_WHEEL_WAIT) == TIME_UP) {
 				// 一定時間経過してもブレーキが解除されない場合、ブレーキ解除指令を再送する
 				result = wheel_set_brake(BRAKE_OFF);
-				if (result == STORE_OK) {
+				if (result == HAL_OK) {
 					set_utimer(CNT_WHEEL_WAIT, RESEND_WAIT);
 				}
 			} else {
@@ -838,7 +860,7 @@ void wheel_cntrl(int16_t left, int16_t right) {
 			if (check_timer(CNT_WHEEL_WAIT) == TIME_UP) {
 				// 一定時間経過してもブレーキモードが書き変わらない場合、ブレーキモード切り替え指令を再送する
 				result = change_wheel_brake_mode(AUTO_BRAKE);
-				if (result == STORE_OK) {
+				if (result == HAL_OK) {
 					set_utimer(CNT_WHEEL_WAIT, RESEND_WAIT);
 				}
 			} else {
@@ -852,7 +874,7 @@ void wheel_cntrl(int16_t left, int16_t right) {
 			wheel_seq = Whl_Run;
 		} else if (check_wheel_brake() != 0) {
 			result = set_control_word(DRV_DISABLE);
-			if (result == STORE_OK) {
+			if (result == HAL_OK) {
 				set_utimer(CNT_WHEEL_WAIT, RESEND_WAIT);
 				wheel_seq = Drv_Mode_Disable;
 			}

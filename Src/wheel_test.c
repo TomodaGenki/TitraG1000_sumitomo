@@ -35,6 +35,7 @@ typedef struct test_log{
 	//double		left_ref_[LOGSIZE_TEST];
 	uint32_t	right_enc_[LOGSIZE_TEST];
 	//uint32_t	left_enc_[LOGSIZE_TEST];
+	int32_t		right_trgt_vel_[LOGSIZE_TEST];
 	int32_t		right_demand_vel_[LOGSIZE_TEST];
 	int16_t		right_current_[LOGSIZE_TEST];
 	int32_t		right_act_vel_[LOGSIZE_TEST];
@@ -311,6 +312,7 @@ void test_log_update(){
 		//logdata.left_ref_[logdata.idx_] = left_ref;
 		logdata.right_enc_[logdata.idx_] = right_enc;
 		//logdata.left_enc_[logdata.idx_] = left_enc;
+		logdata.right_trgt_vel_[logdata.idx_] = get_r_wheel_trgt_vel();
 		logdata.right_demand_vel_[logdata.idx_] = get_r_wheel_demand_vel();
 		logdata.right_current_[logdata.idx_] = get_r_wheel_current();
 		logdata.right_act_vel_[logdata.idx_] = get_r_wheel_act_vel();
@@ -352,6 +354,7 @@ void init_test_log(){
 		//logdata.left_ref_[i] = 0;
 		logdata.right_enc_[i] = 0;
 		//logdata.left_enc_[i] = 0;
+		logdata.right_trgt_vel_[i] = 0;
 		logdata.right_demand_vel_[i] = 0;
 		logdata.right_current_[i] = 0;
 		logdata.right_act_vel_[i] = 0;
@@ -369,11 +372,11 @@ void wheel_test_log_dump() {
 	char buf[600];
 
 	memset(buf, 0x00, sizeof(buf));
-	sprintf(buf, "\r\ntimer, right_ref, right_enc, right_demand_vel, right_current, right_act_vel\r\n");
+	sprintf(buf, "\r\ntimer, right_ref, right_enc, right_trgt_vel, right_demand_vel, right_current, right_act_vel\r\n");
 	uart2_transmitte(buf);
 
 	memset(buf, 0x00, sizeof(buf));
-	sprintf(buf, "[msec], [m/s], [inc], [inc/s], [A/100], [inc/s]\r\n");
+	sprintf(buf, "[msec], [m/s], [inc], [inc/s], [inc/s], [A/100], [inc/s]\r\n");
 	uart2_transmitte(buf);
 
 	for(int i = 0; i < LOGSIZE_TEST; i++) {
@@ -381,14 +384,15 @@ void wheel_test_log_dump() {
 			break;
 		}
 		memset(buf, 0x00, sizeof(buf));
-		//             1   2   3   4   5   6
-		sprintf(buf, "%d, %f, %d, %d, %d, %d\r\n",
+		//             1   2   3   4   5   6   7
+		sprintf(buf, "%d, %f, %d, %d, %d, %d, %d\r\n",
 				logdata.timer_[i],		//1
 				logdata.right_ref_[i],	//2
 				logdata.right_enc_[i],	//3
-				logdata.right_demand_vel_[i],//4
-				logdata.right_current_[i],	//5
-				logdata.right_act_vel_[i]	//6
+				logdata.right_trgt_vel_[i],	//4
+				logdata.right_demand_vel_[i],//5
+				logdata.right_current_[i],	//6
+				logdata.right_act_vel_[i]	//7
 				);
 		uart2_transmitte(buf);
 	}

@@ -228,10 +228,7 @@ int main(void)
 
 	  if (check_timer(CNT_WHEEL_ENCODER) == TIME_UP) {	// エンコーダー取得のための関数
 		  // 10msec
-		  monitor_wheel_encoder();
-		  monitor_wheel_demand_vel();
-		  monitor_wheel_current();
-		  monitor_wheel_act_vel();
+		  //monitor_wheel_encoder();
 		  set_utimer(CNT_WHEEL_ENCODER, CNT_PROCPERIOD);
 	  }
 
@@ -271,7 +268,7 @@ int main(void)
 		  if (Is_SyncTurnning() == 0) {
 			  turn_cntrl();
 		  }
-		  can1_transmit();
+		  monit_wheel_feedback();
 //		  wheel_log_update();
 		  set_utimer(CNT_TURN, CNT_TURNPERIOD);		// 1msec
 	  }

@@ -40,6 +40,7 @@ Src/Cntrl_Proc.o: ../Src/Cntrl_Proc.c \
  C:/Users/hoqta/Documents/fw_soft/TitraG1000_sumitomo/Inc/wheel.h \
  C:/Users/hoqta/Documents/fw_soft/TitraG1000_sumitomo/Inc/conf.h \
  C:/Users/hoqta/Documents/fw_soft/TitraG1000_sumitomo/Inc/battery.h \
+ C:/Users/hoqta/Documents/fw_soft/TitraG1000_sumitomo/Inc/charge.h \
  C:/Users/hoqta/Documents/fw_soft/TitraG1000_sumitomo/Inc/lidar.h \
  C:/Users/hoqta/Documents/fw_soft/TitraG1000_sumitomo/Inc/turn.h \
  C:/Users/hoqta/Documents/fw_soft/TitraG1000_sumitomo/Inc/optcom.h \
@@ -129,6 +130,8 @@ C:/Users/hoqta/Documents/fw_soft/TitraG1000_sumitomo/Inc/wheel.h:
 C:/Users/hoqta/Documents/fw_soft/TitraG1000_sumitomo/Inc/conf.h:
 
 C:/Users/hoqta/Documents/fw_soft/TitraG1000_sumitomo/Inc/battery.h:
+
+C:/Users/hoqta/Documents/fw_soft/TitraG1000_sumitomo/Inc/charge.h:
 
 C:/Users/hoqta/Documents/fw_soft/TitraG1000_sumitomo/Inc/lidar.h:
 
