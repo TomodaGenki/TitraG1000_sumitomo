@@ -227,7 +227,11 @@ int main(void)
 	  }
 
 	  if (check_timer(CNT_WHEEL_ENCODER) == TIME_UP) {	// エンコーダー取得のための関数
+		  // 10msec
 		  monitor_wheel_encoder();
+		  monitor_wheel_demand_vel();
+		  monitor_wheel_current();
+		  monitor_wheel_act_vel();
 		  set_utimer(CNT_WHEEL_ENCODER, CNT_PROCPERIOD);
 	  }
 

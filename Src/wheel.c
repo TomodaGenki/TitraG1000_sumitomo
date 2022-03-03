@@ -105,6 +105,10 @@ enum emcy_can_data {
 #define ENCODER_OBJ		0x6064		// エンコーダ情報
 #define POLARITY_OBJ	0x607E		// 極性
 
+#define DEMANDVEL_OBJ	0x6068		// ドライバ内部の速度要求値
+#define CURRENT_OBJ		0x2050		// トルク電流値
+#define ACTVEL_OBJ		0x606C		// 速度実測値
+
 // Sub-Index情報の定義
 #define SUB_INDEX_0		0x00
 #define SUB_INDEX_1		0x01
@@ -311,6 +315,19 @@ void receive_wheel_motor_data(uint8_t *receive_data, uint8_t l_r) {
 	case ENCODER_OBJ:
 		motor_data->whl_encoder = rx_cnv.l_val;
 		break;
+
+	case DEMANDVEL_OBJ:
+		motor_data->whl_demand_vel = rx_cnv.l_val;
+		break;
+
+	case CURRENT_OBJ:
+		motor_data->whl_current = rx_cnv.l_val;
+		break;
+
+	case ACTVEL_OBJ:
+		motor_data->whl_act_vel = rx_cnv.l_val;
+		break;
+
 	}
 }
 
@@ -382,6 +399,30 @@ uint32_t get_l_wheel_encoder(void) {
 
 uint32_t get_r_wheel_encoder(void) {
 	return r_motor_data.whl_encoder;
+}
+
+int32_t get_l_wheel_demand_vel(void){
+	return l_motor_data.whl_demand_vel;
+}
+
+int32_t get_r_wheel_demand_vel(void){
+	return r_motor_data.whl_demand_vel;
+}
+
+int16_t get_l_wheel_current(void){
+	return l_motor_data.whl_current;
+}
+
+int16_t get_r_wheel_current(void){
+	return r_motor_data.whl_current;
+}
+
+int32_t get_l_wheel_act_vel(void){
+	return l_motor_data.whl_act_vel;
+}
+
+int32_t get_r_wheel_act_vel(void){
+	return r_motor_data.whl_act_vel;
 }
 
 uint8_t set_drive_mode(uint8_t mode) {
@@ -527,6 +568,30 @@ void monitor_wheel_encoder(void) {
 		// 起動が完了していないタイミングでは、エンコーダー情報を取得しにいかない
 		transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), READ_REQ, ENCODER_OBJ, SUB_INDEX_0, READ_DATA);
 		transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), READ_REQ, ENCODER_OBJ, SUB_INDEX_0, READ_DATA);
+	}
+}
+
+void monitor_wheel_demand_vel(void){
+	// ドライバ内部での速度要求値を取得する
+	if (wheel_seq >= Whl_Run) {
+		transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), READ_REQ, DEMANDVEL_OBJ, SUB_INDEX_0, READ_DATA);
+		transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), READ_REQ, DEMANDVEL_OBJ, SUB_INDEX_0, READ_DATA);
+	}
+}
+
+void monitor_wheel_current(void){
+	// 電流値を取得する
+	if (wheel_seq >= Whl_Run) {
+		transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), READ_REQ, CURRENT_OBJ, SUB_INDEX_0, READ_DATA);
+		transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), READ_REQ, CURRENT_OBJ, SUB_INDEX_0, READ_DATA);
+	}
+}
+
+void monitor_wheel_act_vel(void){
+	// 速度実測値を取得する
+	if (wheel_seq >= Whl_Run) {
+		transmit_motor_control_data((SDO_TX_ID + L_WHEEL_ID), READ_REQ, ACTVEL_OBJ, SUB_INDEX_0, READ_DATA);
+		transmit_motor_control_data((SDO_TX_ID + R_WHEEL_ID), READ_REQ, ACTVEL_OBJ, SUB_INDEX_0, READ_DATA);
 	}
 }
 

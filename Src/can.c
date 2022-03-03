@@ -81,30 +81,6 @@ void can_filter_setting(void) {
 	HAL_CAN_ConfigFilter(&hcan1, &filter);
 }
 
-//// CAN送信用の関数
-//HAL_StatusTypeDef can1_transmit(uint16_t id, uint8_t *pdata) {
-//
-//	static CAN_TxHeaderTypeDef TxHeader;
-//	uint32_t TxMailbox;
-//	uint32_t remain_box = HAL_CAN_GetTxMailboxesFreeLevel(&hcan1);
-//	HAL_StatusTypeDef result = HAL_OK;
-//
-//	if (remain_box > 0) {
-//		// CANの送信BOXに空きがある場合のみ送信を行う
-//		// CANの設定
-//		TxHeader.StdId = id;			// CAN ID
-//		TxHeader.RTR = CAN_RTR_DATA;	// データフレームを指定
-//		TxHeader.IDE = CAN_ID_STD;		// 11 bit ID (標準ID)
-//		TxHeader.DLC = 8;				// Data Length 8Byte
-//		TxHeader.TransmitGlobalTime = DISABLE;
-//
-//		result = HAL_CAN_AddTxMessage(&hcan1, &TxHeader, pdata, &TxMailbox);
-//	} else {
-//		result = HAL_ERROR;
-//	}
-//	return result;
-//}
-
 
 #define CAN_TX_BUFFER_LEN	20
 static uint16_t store_txid[CAN_TX_BUFFER_LEN];
@@ -135,6 +111,7 @@ uint8_t can1_push_txmsg(uint16_t id, uint8_t *pdata) {
 HAL_StatusTypeDef can1_transmit(){
 /*
  * 送信メールボックスに空きがあればキュー(先入先出)からデータを取り出して送信
+ * 送信できたメッセージはキューから削除
  */
 
 	static CAN_TxHeaderTypeDef TxHeader;
@@ -152,7 +129,7 @@ HAL_StatusTypeDef can1_transmit(){
 		result = HAL_CAN_AddTxMessage(&hcan1, &TxHeader, store_txdata[1], &TxMailbox);
 
 		if (result == HAL_OK){
-			// 送信に成功したらキュー先頭のメッセージは削除
+			// 送信に成功したメッセージは削除
 			for (uint8_t i = 1; i < CAN_TX_BUFFER_LEN - 1; i++){
 				store_txid[i] = store_txid[i + 1];
 	            for (int j = 0; j < 8; j++){
@@ -162,7 +139,6 @@ HAL_StatusTypeDef can1_transmit(){
 			tail--;
 		}
 	}
-
 	return result;
 }
 

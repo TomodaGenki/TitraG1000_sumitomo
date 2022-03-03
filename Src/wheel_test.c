@@ -23,7 +23,7 @@
 #define TEST_ING	2		// ステータス：ING
 #define TEST_COMP	3		// ステータス：COMP
 #define MAX_PHASE	13		// フェーズ最大値
-#define LOGSIZE_TEST 2600	// ログ点数
+#define LOGSIZE_TEST 1800	// ログ点数
 #define TIM_CYCLE	24.39024	//タイマーカウントアップ周期(secを10^6倍)
 
 
@@ -32,9 +32,12 @@ typedef struct test_log{
 	uint16_t	idx_;
 	uint32_t	timer_[LOGSIZE_TEST];
 	double		right_ref_[LOGSIZE_TEST];
-	double		left_ref_[LOGSIZE_TEST];
+	//double		left_ref_[LOGSIZE_TEST];
 	uint32_t	right_enc_[LOGSIZE_TEST];
-	uint32_t	left_enc_[LOGSIZE_TEST];
+	//uint32_t	left_enc_[LOGSIZE_TEST];
+	int32_t		right_demand_vel_[LOGSIZE_TEST];
+	int16_t		right_current_[LOGSIZE_TEST];
+	int32_t		right_act_vel_[LOGSIZE_TEST];
 }TEST_LOG;
 
 TEST_LOG logdata;
@@ -87,24 +90,24 @@ uint8_t	phase = 0;					// 制御フェーズ
 //double	e_ref_phase_r[] =   {0.00,  2.00,  2.00,  2.10,  2.00,  0.00,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 //double	s_ref_phase_l[] =   {0.00,  0.00,  2.00,  2.10,  2.00,  2.00,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 //double	e_ref_phase_l[] =   {0.00,  2.00,  2.00,  2.10,  2.00,  0.00,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-// P001-3			   	        0      1      2      3      4      5     6    7    8    9    10   11   12   13
-uint16_t phase_time[] = 	{1000,  3000,  3000,  3000,  3000,  3000, 1000,   0,   0,   0,   0,   0,   0,   0};
-double	s_ref_phase_r[] =   {0.00,  0.00,  1.20,  1.30,  1.20,  1.20,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-double	e_ref_phase_r[] =   {0.00,  1.20,  1.20,  1.30,  1.20,  0.00,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-double	s_ref_phase_l[] =   {0.00,  0.00,  1.20,  1.30,  1.20,  1.20,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-double	e_ref_phase_l[] =   {0.00,  1.20,  1.20,  1.30,  1.20,  0.00,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+//// P001-3			   	        0      1      2      3      4      5     6    7    8    9    10   11   12   13
+//uint16_t phase_time[] = 	{1000,  3000,  3000,  3000,  3000,  3000, 1000,   0,   0,   0,   0,   0,   0,   0};
+//double	s_ref_phase_r[] =   {0.00,  0.00,  1.20,  1.30,  1.20,  1.20,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+//double	e_ref_phase_r[] =   {0.00,  1.20,  1.20,  1.30,  1.20,  0.00,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+//double	s_ref_phase_l[] =   {0.00,  0.00,  1.20,  1.30,  1.20,  1.20,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+//double	e_ref_phase_l[] =   {0.00,  1.20,  1.20,  1.30,  1.20,  0.00,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 //// P003-1			   	        0      1      2      3      4      5     6    7    8    9    10   11   12   13
 //uint16_t phase_time[] = 	{1000,  2000,  2438,  3000,  2375,  2000, 1000,   0,   0,   0,   0,   0,   0,   0};
 //double	s_ref_phase_r[] =   {0.00,  0.00,  0.05,  2.00,  2.00,  0.10,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 //double	e_ref_phase_r[] =   {0.00,  0.05,  2.00,  2.00,  0.10,  0.10,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 //double	s_ref_phase_l[] =   {0.00,  0.00,  0.05,  2.00,  2.00,  0.10,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 //double	e_ref_phase_l[] =   {0.00,  0.05,  2.00,  2.00,  0.10,  0.10,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-//// P003-2			   	        0      1      2      3      4      5     6    7    8    9    10   11   12   13
-//uint16_t phase_time[] = 	{1000,  2000,  2875,  3000,  2750,  2000, 1000,   0,   0,   0,   0,   0,   0,   0};
-//double	s_ref_phase_r[] =   {0.00,  0.00,  0.05,  1.20,  1.20,  0.10,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-//double	e_ref_phase_r[] =   {0.00,  0.05,  1.20,  1.20,  0.10,  0.10,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-//double	s_ref_phase_l[] =   {0.00,  0.00,  0.05,  1.20,  1.20,  0.10,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-//double	e_ref_phase_l[] =   {0.00,  0.05,  1.20,  1.20,  0.10,  0.10,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+// P003-2			   	        0      1      2      3      4      5     6    7    8    9    10   11   12   13
+uint16_t phase_time[] = 	{1000,  2000,  2875,  3000,  2750,  2000, 1000,   0,   0,   0,   0,   0,   0,   0};
+double	s_ref_phase_r[] =   {0.00,  0.00,  0.05,  1.20,  1.20,  0.10,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+double	e_ref_phase_r[] =   {0.00,  0.05,  1.20,  1.20,  0.10,  0.10,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+double	s_ref_phase_l[] =   {0.00,  0.00,  0.05,  1.20,  1.20,  0.10,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+double	e_ref_phase_l[] =   {0.00,  0.05,  1.20,  1.20,  0.10,  0.10,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 //// P004-1 			   	        0      1      2      3      4      5     6    7    8    9    10   11   12   13
 //uint16_t phase_time[] = 	{1000,  1000,  1294,  3000,  3000,  1000,    0,   0,   0,   0,   0,   0,   0,   0};
 //double	s_ref_phase_r[] =   {0.00,  0.00,  0.10,  1.20,  1.20,  0.00,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -305,9 +308,12 @@ void test_log_update(){
 	if(logdata.idx_ < LOGSIZE_TEST){
 		logdata.timer_[logdata.idx_] = timer;
 		logdata.right_ref_[logdata.idx_] = right_ref;
-		logdata.left_ref_[logdata.idx_] = left_ref;
+		//logdata.left_ref_[logdata.idx_] = left_ref;
 		logdata.right_enc_[logdata.idx_] = right_enc;
-		logdata.left_enc_[logdata.idx_] = left_enc;
+		//logdata.left_enc_[logdata.idx_] = left_enc;
+		logdata.right_demand_vel_[logdata.idx_] = get_r_wheel_demand_vel();
+		logdata.right_current_[logdata.idx_] = get_r_wheel_current();
+		logdata.right_act_vel_[logdata.idx_] = get_r_wheel_act_vel();
 		logdata.idx_ ++;
 	}
 #endif
@@ -343,9 +349,12 @@ void init_test_log(){
 	for(int i = 0; i < LOGSIZE_TEST; i++){
 		logdata.timer_[i] = 0;
 		logdata.right_ref_[i] = 0;
-		logdata.left_ref_[i] = 0;
+		//logdata.left_ref_[i] = 0;
 		logdata.right_enc_[i] = 0;
-		logdata.left_enc_[i] = 0;
+		//logdata.left_enc_[i] = 0;
+		logdata.right_demand_vel_[i] = 0;
+		logdata.right_current_[i] = 0;
+		logdata.right_act_vel_[i] = 0;
 	}
 #endif
 }
@@ -360,11 +369,11 @@ void wheel_test_log_dump() {
 	char buf[600];
 
 	memset(buf, 0x00, sizeof(buf));
-	sprintf(buf, "\r\ntimer, right_ref, left_ref, right_enc, left_enc\r\n");
+	sprintf(buf, "\r\ntimer, right_ref, right_enc, right_demand_vel, right_current, right_act_vel\r\n");
 	uart2_transmitte(buf);
 
 	memset(buf, 0x00, sizeof(buf));
-	sprintf(buf, "[msec], [m/s], [m/s], [-], [-]\r\n");
+	sprintf(buf, "[msec], [m/s], [inc], [inc/s], [A/100], [inc/s]\r\n");
 	uart2_transmitte(buf);
 
 	for(int i = 0; i < LOGSIZE_TEST; i++) {
@@ -372,13 +381,14 @@ void wheel_test_log_dump() {
 			break;
 		}
 		memset(buf, 0x00, sizeof(buf));
-		//             1   2   3   4   5
-		sprintf(buf, "%d, %f, %f, %d, %d\r\n",
+		//             1   2   3   4   5   6
+		sprintf(buf, "%d, %f, %d, %d, %d, %d\r\n",
 				logdata.timer_[i],		//1
 				logdata.right_ref_[i],	//2
-				logdata.left_ref_[i],	//3
-				logdata.right_enc_[i],	//4
-				logdata.left_enc_[i]	//5
+				logdata.right_enc_[i],	//3
+				logdata.right_demand_vel_[i],//4
+				logdata.right_current_[i],	//5
+				logdata.right_act_vel_[i]	//6
 				);
 		uart2_transmitte(buf);
 	}

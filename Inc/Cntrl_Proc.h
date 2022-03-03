@@ -125,11 +125,11 @@ enum cntrl_timer{
 #define	CNT_FIRMTIME	5000				// submit firmware version after power on
 #define CNT_TURNPERIOD	1					// Turn table
 #define CNT_SYNCTURN_VAL	10
-#define MOTOR_WAKEUP_START	5000
-#define MOTOR_WAKEUP_TIMER	3000
+#define MOTOR_WAKEUP_START	2000
+#define MOTOR_WAKEUP_TIMER	1000
 #define ONE_SHOT_TIMER		100
 #define RESET_WAIT_TIMER	10000
-#define WHEEL_MOTOR_WAKE_UP		10000
+#define WHEEL_MOTOR_WAKE_UP		5000
 #define WHEEL_CAN_WAIT_TIME		50
 #define CNT_2MSEC		2					// 2msec
 

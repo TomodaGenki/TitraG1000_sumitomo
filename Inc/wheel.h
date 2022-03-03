@@ -30,7 +30,16 @@ void receive_wheel_motor_data(uint8_t *receive_data, uint8_t l_r);
 void receive_wheel_motor_error_data(uint8_t *receive_data, uint8_t l_r);
 uint32_t get_l_wheel_encoder(void);
 uint32_t get_r_wheel_encoder(void);
+int32_t get_l_wheel_demand_vel(void);
+int32_t get_r_wheel_demand_vel(void);
+int16_t get_l_wheel_current(void);
+int16_t get_r_wheel_current(void);
+int32_t get_l_wheel_act_vel(void);
+int32_t get_r_wheel_act_vel(void);
 void monitor_wheel_encoder(void);
+void monitor_wheel_demand_vel(void);
+void monitor_wheel_current(void);
+void monitor_wheel_act_vel(void);
 
 /* define ------------------------------------------------------------*/
 // CAN ID ‚Ì’è‹`
@@ -46,7 +55,9 @@ typedef struct whl_mtr_data {
 	uint8_t		brake_status;
 	uint32_t	whl_encoder;
 	uint16_t	whl_error;
-
+	int32_t		whl_demand_vel;
+	int16_t		whl_current;
+	int32_t		whl_act_vel;
 } WHL_MTR_DATA;
 
 
