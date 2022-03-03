@@ -267,6 +267,7 @@ int main(void)
 		  if (Is_SyncTurnning() == 0) {
 			  turn_cntrl();
 		  }
+		  can1_transmit();
 //		  wheel_log_update();
 		  set_utimer(CNT_TURN, CNT_TURNPERIOD);		// 1msec
 	  }

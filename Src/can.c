@@ -81,27 +81,101 @@ void can_filter_setting(void) {
 	HAL_CAN_ConfigFilter(&hcan1, &filter);
 }
 
-// CAN送信用の関数
-HAL_StatusTypeDef can1_transmit(uint16_t id, uint8_t *pdata) {
+//// CAN送信用の関数
+//HAL_StatusTypeDef can1_transmit(uint16_t id, uint8_t *pdata) {
+//
+//	static CAN_TxHeaderTypeDef TxHeader;
+//	uint32_t TxMailbox;
+//	uint32_t remain_box = HAL_CAN_GetTxMailboxesFreeLevel(&hcan1);
+//	HAL_StatusTypeDef result = HAL_OK;
+//
+//	if (remain_box > 0) {
+//		// CANの送信BOXに空きがある場合のみ送信を行う
+//		// CANの設定
+//		TxHeader.StdId = id;			// CAN ID
+//		TxHeader.RTR = CAN_RTR_DATA;	// データフレームを指定
+//		TxHeader.IDE = CAN_ID_STD;		// 11 bit ID (標準ID)
+//		TxHeader.DLC = 8;				// Data Length 8Byte
+//		TxHeader.TransmitGlobalTime = DISABLE;
+//
+//		result = HAL_CAN_AddTxMessage(&hcan1, &TxHeader, pdata, &TxMailbox);
+//	} else {
+//		result = HAL_ERROR;
+//	}
+//	return result;
+//}
+
+
+#define CAN_TX_BUFFER_LEN	20
+static uint16_t store_txid[CAN_TX_BUFFER_LEN];
+static uint8_t	store_txdata[CAN_TX_BUFFER_LEN][8];
+static uint8_t tail = 0;
+
+uint8_t can1_push_txmsg(uint16_t id, uint8_t *pdata) {
+/*
+ * 送信メッセージをキュー(先入先出) に追加
+ * 追加出来たらSTORE_OKを返し、満杯で追加できなかったらSTORE_NGを返す
+ */
+	uint8_t result = STORE_NG;
+	if(tail < CAN_TX_BUFFER_LEN - 1){
+		store_txid[tail + 1] = id;
+        for (int i = 0; i < 8; i++){
+        	store_txdata[tail + 1][i] = pdata[i];
+        }
+		tail++;
+		result = STORE_OK;
+	}
+	else{
+		result = STORE_NG;
+	}
+	return result;
+}
+
+
+HAL_StatusTypeDef can1_transmit(){
+/*
+ * 送信メールボックスに空きがあればキュー(先入先出)からデータを取り出して送信
+ */
 
 	static CAN_TxHeaderTypeDef TxHeader;
 	uint32_t TxMailbox;
 	uint32_t remain_box = HAL_CAN_GetTxMailboxesFreeLevel(&hcan1);
 	HAL_StatusTypeDef result = HAL_OK;
 
-	if (remain_box > 0) {
-		// CANの送信BOXに空きがある場合のみ送信を行う
-		// CANの設定
-		TxHeader.StdId = id;			// CAN ID
+	// メールボックスがいっぱいになるか、キューが空になるまで送信する
+	while((remain_box > 0) && (tail != 0)){
+		TxHeader.StdId = store_txid[1];// CAN ID
 		TxHeader.RTR = CAN_RTR_DATA;	// データフレームを指定
 		TxHeader.IDE = CAN_ID_STD;		// 11 bit ID (標準ID)
 		TxHeader.DLC = 8;				// Data Length 8Byte
 		TxHeader.TransmitGlobalTime = DISABLE;
+		result = HAL_CAN_AddTxMessage(&hcan1, &TxHeader, store_txdata[1], &TxMailbox);
 
-		result = HAL_CAN_AddTxMessage(&hcan1, &TxHeader, pdata, &TxMailbox);
-	} else {
-		result = HAL_ERROR;
+		if (result == HAL_OK){
+			// 送信に成功したらキュー先頭のメッセージは削除
+			for (uint8_t i = 1; i < CAN_TX_BUFFER_LEN - 1; i++){
+				store_txid[i] = store_txid[i + 1];
+	            for (int j = 0; j < 8; j++){
+	            	store_txdata[i][j] = store_txdata[i + 1][j];
+	            }
+			}
+			tail--;
+		}
 	}
+
 	return result;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 

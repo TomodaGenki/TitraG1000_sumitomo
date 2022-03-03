@@ -10,7 +10,11 @@
 
 /* function ----------------------------------------------------------*/
 void can_filter_setting(void);
-HAL_StatusTypeDef can1_transmit(uint16_t id, uint8_t *pdata);
+HAL_StatusTypeDef can1_transmit(void);
+uint8_t can1_push_txmsg(uint16_t id, uint8_t *pdata);
 /* define ------------------------------------------------------------*/
+#define STORE_OK	0	// 送信バッファに格納成功
+#define STORE_NG	1	// 送信バッファに格納失敗
+
 
 #endif /* CAN */
